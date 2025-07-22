@@ -1,0 +1,42 @@
+<div>
+    <h1 class=" py-2 text-center">Task List</h1>
+</div>
+<div class="table-responsive text-center py-2">
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+
+            <th><a (click)="sortTitle('Title', booleanValue)">Title <i class="fa fa-sort"></i></a></th>
+            <th scope="col">Status</th>
+            <th><a (click)="sortTitle('Due Date', booleanValue)">Due Date <i class="fa fa-sort"></i></a></th>
+
+    </thead>
+    <tbody>
+    <tr *ngFor="let item of taskList; index as idx">
+        <td>
+            <button type="button" class="btn btn-outline-primary" (click)="onEdit(item.id)">Edit</button>&nbsp;
+
+            <button type="button" class="btn btn-outline-primary" (click)="onDelete(item.id)">Delete</button>
+        </td>
+        <td>{{item.title}}</td>
+        <td>{{item.status}}</td>
+        <td>{{item.dueDate | date: 'MM/dd/yyyy' }}</td> 
+    </tr>
+    </tbody>
+</table>
+</div>
+
+<mat-paginator #paginator
+               class="demo-paginator"
+               (page)="handlePageEvent($event)"
+               [length]="totalItems"
+               [pageSize]="pageSize"
+               [disabled]="disabled"
+               [showFirstLastButtons]="showFirstLastButtons"
+               [pageSizeOptions]="showPageSizeOptions ? pageSizeOptions : []"
+               [hidePageSize]="hidePageSize"
+               [pageIndex]="pageIndex"
+               aria-label="Select page">
+</mat-paginator>        
+<router-outlet></router-outlet>
