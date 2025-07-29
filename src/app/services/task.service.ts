@@ -1,7 +1,7 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { TaskManager } from '../models/TaskManager';
+import { TaskManager, TaskParameters } from '../models/TaskManager';
 import apiUrl from "../config/config.json";
 
 @Injectable({
@@ -22,10 +22,11 @@ export class TaskService {
     private http: HttpClient
   ) { }
 
-  getTaskManagers(): Observable<TaskManager[]>{
-    const url = `${this.api_url}/${this.controllerName}/GetAll` ;
+  getTaskManagers(parameters: TaskParameters): Observable<any>{
+    const url = `${this.api_url}/${this.controllerName}/GetAll/${parameters.PageNumber}/${parameters.PageSize}` ;
     
-    return this.http.get<TaskManager[]>(url);
+
+    return this.http.get<any>(url);
   }
 
   getTaskManagerById(id: number): Observable<TaskManager>{
@@ -33,9 +34,16 @@ export class TaskService {
     return this.http.get<TaskManager>(url);
   }
 
-  searchTaskManagers(status: string):  Observable<TaskManager[]>{
-    const url = `${this.api_url}/${this.controllerName}/Search/?status=${status}` ;
-    return this.http.get<TaskManager[]>(url);
+  searchTaskManagers(status: string, title: string, parameters: TaskParameters):  Observable<any>{
+    const url = `${this.api_url}/${this.controllerName}/Search` ;
+    
+    let params = new HttpParams()
+          .set('status', status)
+          .set('title', title)
+          .set('pageNumber', parameters.PageNumber)
+          .set('pageSize', parameters.PageSize);
+
+    return this.http.get<any>(url, { params});
   }
 
   createTaskManager(item: TaskManager): Observable<TaskManager>{

@@ -8,6 +8,11 @@ export interface TaskManager{
     dueDate: Date
 }
 
+export interface TaskParameters{
+  PageNumber: number,
+  PageSize: number
+}
+
 export const Constants = {
 
     statusList: [

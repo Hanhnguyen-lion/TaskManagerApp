@@ -3,7 +3,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { TaskService } from '../../services/task.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule} from '@angular/forms';
-import { TaskManager } from '../../models/TaskManager';
+import { TaskManager, TaskParameters } from '../../models/TaskManager';
 import { Observable } from 'rxjs';
 import { DialogService } from '../../services/dialog.service';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -18,6 +18,10 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 export class ListTaskComponent implements OnInit {
 
   taskList?: TaskManager[];
+  taskParameter : TaskParameters = {
+    PageSize : 5,
+    PageNumber : 0
+  };
 
   masterSrv = inject(TaskService);
 
@@ -55,10 +59,15 @@ export class ListTaskComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.pageIndex = 0;
     this.activeTouter.queryParams.subscribe((param) =>{
+  
+      this.pageIndex = 0;
+  
       this.status = param["status"];
       this.title = param["title"];
+
+      this.taskParameter.PageNumber = this.pageIndex;
+
       this.getTaskList();
     })
   }
@@ -71,10 +80,15 @@ export class ListTaskComponent implements OnInit {
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
 
+    this.taskParameter = {
+      PageNumber: this.pageIndex + 1,
+      PageSize: this.pageSize
+    };
+    
     this.getTaskList();
   }
   
-setPageSizeOptions(setPageSizeOptionsInput: string) {
+  setPageSizeOptions(setPageSizeOptionsInput: string) {
     if (setPageSizeOptionsInput) {
       this.pageSizeOptions = setPageSizeOptionsInput.split(',').map(str => +str);
     }
@@ -82,37 +96,28 @@ setPageSizeOptions(setPageSizeOptionsInput: string) {
 
   setFilteredData() {
     this.taskList = this.taskList?.slice(this.pageSize * this.pageIndex, this.pageSize * this.pageIndex + this.pageSize);
-}
+  }
 
   getTaskList(){
-    var items: Observable<TaskManager[]> = this.masterSrv.getTaskManagers();
 
-    if (this.status){
-      items = this.masterSrv.searchTaskManagers(this.status);
+    if (this.status || this.title){
+      var items = this.masterSrv.searchTaskManagers(this.status, this.title, this.taskParameter);
       items.subscribe(
         (data) =>{
-          this.taskList = data?.slice(this.pageSize * this.pageIndex, this.pageSize * this.pageIndex + this.pageSize);
-          this.totalItems = data.length;
-        }
-      )
-    }
-    else if (this.title){
-      items.subscribe(
-        (data) =>{
-          var filters = data.filter(li => li?.title.toLowerCase().includes(this.title.toLowerCase()));
-          this.taskList = filters?.slice(this.pageSize * this.pageIndex, this.pageSize * this.pageIndex + this.pageSize);
-          this.totalItems = filters.length;
+          this.taskList = data?.data;
+          this.totalItems = data.totalRecords;
         }
       )
     }
     else{
+      var items: Observable<any> = this.masterSrv.getTaskManagers(this.taskParameter);
       items.subscribe(
         (data) =>{
-          this.taskList = data?.slice(this.pageSize * this.pageIndex, this.pageSize * this.pageIndex + this.pageSize);
-          this.totalItems = data.length;
+          this.taskList = data?.data;
+          this.totalItems = data.totalRecords;
         }
       )
-    }
+   }
 
   }
 
@@ -154,6 +159,8 @@ setPageSizeOptions(setPageSizeOptionsInput: string) {
       if (result){
         this.masterSrv.deleteTaskManager(id).subscribe(
           () =>{
+            this.pageIndex = 0;
+            this.taskParameter.PageNumber = this.pageIndex + 1;
             this.getTaskList();
           },
           error => {
